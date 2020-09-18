@@ -1,2 +1,3 @@
 # ActionUrl
-L'objectif ici est de mettre un objet javascript à disposition du développeur lui permettant d'accéder aux URL disponibles pour les actions définies dans son application ASP.Net Mvc.
+The purpose of this code is to provide a javascript object that allows to clearly reference all the URL that give access to the actions in the controllers of an Asp.net MVC Application.
+

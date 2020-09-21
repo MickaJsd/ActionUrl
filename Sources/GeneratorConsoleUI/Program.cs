@@ -1,4 +1,5 @@
-﻿namespace GeneratorConsoleUI
+﻿using System.Web.Mvc;
+namespace GeneratorConsoleUI
 {
 
     internal class Program
@@ -23,18 +24,18 @@
                 }
 
             */
-            string jsActions = Run(args[0]);
+            Run(args[0]);
 
-            System.Console.WriteLine(jsActions);
             Pause();
         }
 
-        public static string Run(string assemblyPath)
+        public static void Run(string assemblyPath)
         {
-            AssemblyJsSerializer.MvcActionSerializer serializer = new AssemblyJsSerializer.MvcActionSerializer();
-            return serializer.SerializeFormat<System.Web.Mvc.Controller, System.Web.Mvc.ActionResult>(
-                                System.Reflection.Assembly.LoadFile(assemblyPath),
-                                "()=>_getUrl(\"{0}\",\"{1}\")");
+            System.Reflection.Assembly assembly = System.Reflection.Assembly.LoadFile(assemblyPath);
+            AssemblyJsSerializer.MvcActionSerializer<Controller, ActionResult> serializer =
+                new AssemblyJsSerializer.MvcActionSerializer<Controller, ActionResult>(assembly);
+            serializer.FieldFormat = "()=>_getUrl(\"{0}\",\"{1}\")";
+            serializer.SerializeToFile("c:\\test.tst");
 
         }
 

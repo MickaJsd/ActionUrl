@@ -88,6 +88,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\ActionUrl.js" />
     <Content Include="Global.asax" />
     <Content Include="Web.config" />
   </ItemGroup>
@@ -123,10 +124,6 @@
     <ProjectReference Include="..\AssemblyJsSerializer\AssemblyJsSerializer.csproj">
       <Project>{eeef9d82-cb40-496b-b3fa-cb0c93616405}</Project>
       <Name>AssemblyJsSerializer</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\GeneratorConsoleUI\GeneratorConsoleUI.csproj">
-      <Project>{caac65c4-480c-4c99-8648-0320165d90aa}</Project>
-      <Name>GeneratorConsoleUI</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
@@ -164,7 +161,7 @@
     <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.0\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.0\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -Command "BuildEvents/PostBuild.ps1 -targetAsssemblyPath '$(TargetPath)'"  &gt; postbuild.txt</PostBuildEvent>
+    <PostBuildEvent>powershell.exe -ExecutionPolicy Bypass -NoProfile -NonInteractive -Command "BuildEvents/PostBuild.ps1 -sourceAssemblyPath '$(TargetPath)' -targetFile '$(ProjectDir)/Content/ActionUrl.js'"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

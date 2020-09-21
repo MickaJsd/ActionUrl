@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Include="MvcActionSerializer.cs" />
     <Compile Include="ObjectMethodsSerializer.cs" />
+    <Compile Include="ObjectMethodsSerializerGeneric.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

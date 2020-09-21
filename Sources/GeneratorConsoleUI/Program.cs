@@ -1,62 +1,11 @@
-﻿using System.Runtime.Serialization;
-using System;
-using System.Collections;
-using System.Dynamic;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
-using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.Text;
-using System.Runtime.Remoting.Messaging;
-using System.Runtime.CompilerServices;
-
-using System.Web.Mvc;
-namespace GeneratorConsoleUI
+﻿namespace GeneratorConsoleUI
 {
-    //internal class Controller
-    //{
-    //}
-
-    //internal class actionResult
-    //{
-    //}
-
-    //internal class jsonResult : actionResult
-    //{
-    //}
-
-    //internal class HomeController : Controller
-    //{
-    //    public actionResult index()
-    //    {
-    //        return null;
-    //    }
-
-    //    public jsonResult create()
-    //    {
-    //        return null;
-    //    }
-    //}
-
-    //internal class UserController : Controller
-    //{
-    //    public void index()
-    //    {
-    //    }
-
-    //    public jsonResult create()
-    //    {
-    //        return null;
-    //    }
-    //}
 
     internal class Program
     {
         private static void Main(string[] args)
         {
-            
-            var serializer = new AssemblyJsSerializer.MvcActionSerializer();
+
             /*
                 code généré attendu : 
                 {
@@ -74,19 +23,25 @@ namespace GeneratorConsoleUI
                 }
 
             */
-            var jsActions = serializer.Serialize<Controller, ActionResult>(
-                                Assembly.LoadFile(args[0]),
-                                (type, method) => $"()=>_getUrl(\"{serializer.GetTypeName(type)}\",\"{serializer.GetMethodName(method)}\")");
+            string jsActions = Run(args[0]);
 
-            Console.WriteLine(jsActions);
+            System.Console.WriteLine(jsActions);
             Pause();
+        }
+
+        public static string Run(string assemblyPath)
+        {
+            AssemblyJsSerializer.MvcActionSerializer serializer = new AssemblyJsSerializer.MvcActionSerializer();
+            return serializer.SerializeFormat<System.Web.Mvc.Controller, System.Web.Mvc.ActionResult>(
+                                System.Reflection.Assembly.LoadFile(assemblyPath),
+                                "()=>_getUrl(\"{0}\",\"{1}\")");
+
         }
 
         private static void Pause()
         {
-            Console.WriteLine("Pause...");
-            Console.ReadLine();
+            System.Console.WriteLine("Pause...");
+            System.Console.ReadLine();
         }
-
     }
 }

@@ -52,12 +52,18 @@ namespace AssemblyJsSerializer
             return endObjectToString(sbType);
         }
 
-        public string Serialize<ControllerBaseType, ActionResultType>(Assembly assembly, Func<Type, MethodInfo, string> contentGenerator)
+        public string SerializeGeneric<ControllerBaseType, ActionResultType>(Assembly assembly, Func<Type, MethodInfo, string> contentGenerator)
         {
             return Serialize(assembly,
                         (t) => t.BaseType == typeof(ControllerBaseType) && t.IsClass,
                         (m) => m.ReturnType == typeof(ActionResultType) || m.ReturnType.IsSubclassOf(typeof(ActionResultType)),
                         contentGenerator);
+        }
+
+
+        public string SerializeFormat<ControllerBaseType, ActionResultType>(Assembly assembly, string format)
+        {
+            return SerializeGeneric<ControllerBaseType, ActionResultType>(assembly, (t, m) => string.Format(format, this.GetTypeName(t), this.GetMethodName(m)));
         }
     }
 }

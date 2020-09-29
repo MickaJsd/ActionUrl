@@ -8,12 +8,12 @@
 //------------------------------------------------------------------------------
 
 const SourceWebAppTest = {
-    'Home':{
-        'Index':()=>_getUrl("Home","Index"),
+    'HomeController':{
+        'Index':()=>_getUrl("HomeController","Index"),
     },
-    'User':{
-        'Index':()=>_getUrl("User","Index"),
-        'Create':()=>_getUrl("User","Create"),
-        'Delete':()=>_getUrl("User","Delete"),
+    'UserController':{
+        'Index':()=>_getUrl("UserController","Index"),
+        'Create':()=>_getUrl("UserController","Create"),
+        'Delete':()=>_getUrl("UserController","Delete"),
     },
 }

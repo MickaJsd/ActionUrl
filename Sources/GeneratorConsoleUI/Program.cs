@@ -1,4 +1,4 @@
-﻿using System.Web.Mvc;
+﻿using System.IO;
 namespace GeneratorConsoleUI
 {
 
@@ -6,37 +6,17 @@ namespace GeneratorConsoleUI
     {
         private static void Main(string[] args)
         {
-
-            /*
-                code généré attendu : 
-                {
-                    'controller1' : {
-                        'action1': _getUrl("controller1","action1"),
-                        'action2': _getUrl("controller1","action2"),
-                        'action3': _getUrl("controller1","action3")
-                    },
-                    'controller2' : {
-                        'action1': _getUrl("controller2","action1"),
-                        'action2': _getUrl("controller2","action2"),
-                        'action3': _getUrl("controller2","action3")
-                    },
-                    ...
-                }
-
-            */
-            Run(args[0]);
+            Run();
 
             Pause();
         }
 
-        public static void Run(string assemblyPath)
+        public static void Run()
         {
-            System.Reflection.Assembly assembly = System.Reflection.Assembly.LoadFile(assemblyPath);
-            AssemblyJsSerializer.MvcActionSerializer<Controller, ActionResult> serializer =
-                new AssemblyJsSerializer.MvcActionSerializer<Controller, ActionResult>(assembly);
-            serializer.FieldFormat = "()=>_getUrl(\"{0}\",\"{1}\")";
-            serializer.SerializeToFile("c:\\test.tst");
+            AssemblyJsSerializer.ObjectMethodsSerializer serializer = new AssemblyJsSerializer.ObjectMethodsSerializer();
+            var result = serializer.Serialize();
 
+            System.Console.WriteLine(result);
         }
 
         private static void Pause()

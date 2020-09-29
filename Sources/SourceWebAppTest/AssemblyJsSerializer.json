@@ -1,0 +1,19 @@
+{
+  "fieldFormat": "()=>_getUrl(\"{0}\",\"{1}\")",
+  "targetFile": "../Content/ActionUrl.js",
+  "SourceAssemblyName": "SourceWebAppTest",
+  "filters": {
+    "typeFilter": {
+      "isClass": true,
+      "baseType": [
+        "System.Web.Mvc.Controller, System.Web.Mvc"
+      ]
+    },
+    "methodFilter": {
+      "returnType": [
+        "System.Web.Mvc.ActionResult, System.Web.Mvc"
+        //"System.String, mscorlib"
+      ]
+    }
+  }
+}

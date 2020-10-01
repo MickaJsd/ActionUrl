@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AssemblyJsSerializer.Configuration
 {
-    internal class ConfigurationLoader : NestedErrorHandler
+    internal class ConfigurationLoader : IErrorHandledObject
     {
         private const string DEFAULT_FIELD_FORMAT = "'{0}.{1}'";
         private const string CAUTION_HEADER =
@@ -21,6 +21,12 @@ namespace AssemblyJsSerializer.Configuration
 ";
         const string JSON_CONFIG_FILE = "AssemblyJsSerializer.json";
 
+        public IErrorHandler ErrorHandler { get; }
+
+        public ConfigurationLoader(IErrorHandler errorHandler)
+        {
+            this.ErrorHandler = errorHandler;
+        }
 
         public ConfigurationSettings Create(string json)
         {
@@ -60,7 +66,7 @@ namespace AssemblyJsSerializer.Configuration
             }
             catch(Exception e)
             {
-                this.AddExceptionError($"Une erreur est survenue au chargement du fichier de configuration {filePath}", e);
+                this.ErrorHandler.Add($"Une erreur est survenue au chargement du fichier de configuration {filePath}", e);
                 return GetDefault();
             }
         }

@@ -1,21 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace AssemblyJsSerializer.Error
 {
-    public interface IErrorHandler
+    public interface IErrorHandler : ICollection<IError>
     {
-        ICollection<string> Errors
-        {
-            get;
-        }
-
-        ICollection<IErrorHandler> InnerErrorHandlers
-        {
-            get;
-        }
-
-        IEnumerable<string> GetAllErrors();
-
+        IEnumerable<IError> GetAllErrors();
         bool HasErrors();
+        void Add(string message);
+        void Add(string message, Exception e);
+        void AddNestedErrorHandler(IErrorHandler errorHandler);
+
     }
 }

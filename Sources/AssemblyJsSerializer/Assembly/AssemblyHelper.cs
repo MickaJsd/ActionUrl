@@ -1,26 +1,35 @@
 ﻿using AssemblyJsSerializer.Configuration;
+using AssemblyJsSerializer.Error;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using AssemblyJsSerializer.Error;
-using System.Linq;
-using System.ComponentModel.Design;
 
 namespace AssemblyJsSerializer
 {
-    internal class AssemblyHelper : NestedErrorHandler
+    internal class AssemblyHelper : IErrorHandledObject
     {
+        public IErrorHandler ErrorHandler
+        {
+            get;
+        }
+
+        public AssemblyHelper(IErrorHandler errorHandler)
+        {
+            this.ErrorHandler = errorHandler;
+        }
+
         public async Task GetSourceAssemblyAndLoadDependenciesAsync()
         {
             try
             {
-                await LoadAssembliesFromDirectoryToCurrentDomain(Directory.GetCurrentDirectory());
+                await this.LoadAssembliesFromDirectoryToCurrentDomain(Directory.GetCurrentDirectory());
             }
             catch (Exception e)
             {
-                this.AddExceptionError($"Une erreur est survenue lors du chargement des assemblies", e);
+                this.ErrorHandler.Add($"Une erreur est survenue lors du chargement des assemblies", e);
             }
         }
 
@@ -28,7 +37,7 @@ namespace AssemblyJsSerializer
         {
             if (string.IsNullOrWhiteSpace(assemblyName))
             {
-                this.Errors.Add($"Le paramètre de configuration {nameof(ConfigurationSettings.SourceAssemblyName)} n'a pas été renseigné");
+                this.ErrorHandler.Add($"Le paramètre de configuration {nameof(ConfigurationSettings.SourceAssemblyName)} n'a pas été renseigné");
                 return null;
             }
             return AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(a => a.GetName().Name == assemblyName);

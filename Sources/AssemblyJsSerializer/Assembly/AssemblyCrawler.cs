@@ -9,15 +9,20 @@ using TypeFilterSetting = AssemblyJsSerializer.Configuration.TypeFilter;
 
 namespace AssemblyJsSerializer.Assemblies
 {
-    internal class AssemblyCrawler : NestedErrorHandler
+    internal class AssemblyCrawler : IErrorHandledObject
     {
-        public Assembly SourceAssembly
+        #region IErrorHandledObject
+        public IErrorHandler ErrorHandler
         {
             get;
         }
+        #endregion
 
-        public AssemblyCrawler(Assembly sourceAssembly, Filters filters)
+        #region Initialisation
+
+        public AssemblyCrawler(Assembly sourceAssembly, Filters filters, IErrorHandler errorHandler)
         {
+            this.ErrorHandler = errorHandler;
             this.SourceAssembly = sourceAssembly;
             this.InitFilters(filters);
         }
@@ -27,13 +32,19 @@ namespace AssemblyJsSerializer.Assemblies
             this.Filters = filters;
             this.SetTypeFilter();
             this.SetMethodFilter();
-
         }
+        #endregion
 
-        public Filters Filters
+        private Assembly SourceAssembly
         {
             get;
-            private set;
+        }
+
+
+        private Filters Filters
+        {
+            get;
+            set;
         }
 
         private IEnumerable<Type> GetTypesByName(IEnumerable<string> typeNames)
@@ -42,7 +53,7 @@ namespace AssemblyJsSerializer.Assemblies
             var nullTypes = baseTypesByName.Where(kv => kv.Value == null);
             if (nullTypes.Any())
             {
-                this.Errors.Add($"Des types configurés n'ont pas pu être résolus : [{string.Join(";", nullTypes.Select(kv => kv.Key))}]");
+                this.ErrorHandler.Add($"Des types configurés n'ont pas pu être résolus : [{string.Join(";", nullTypes.Select(kv => kv.Key))}]");
             }
             return baseTypesByName.Where(kv => kv.Value != null).Select(kv => kv.Value);
         }
@@ -181,7 +192,7 @@ namespace AssemblyJsSerializer.Assemblies
             }
             catch (Exception e)
             {
-                this.AddExceptionError($"une erreur est survenue lors du parcours de l'assembly {SourceAssembly.GetName()}", e);
+                this.ErrorHandler.Add($"une erreur est survenue lors du parcours de l'assembly {SourceAssembly.GetName()}", e);
                 return new FilteredType[] { };
             }
         }

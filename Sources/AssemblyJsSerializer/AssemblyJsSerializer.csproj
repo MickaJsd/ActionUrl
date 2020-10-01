@@ -46,7 +46,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\MethodFilter.cs" />
-    <Compile Include="Error\NestedErrorHandler.cs" />
+    <Compile Include="Error\Error.cs" />
+    <Compile Include="Error\IError.cs" />
+    <Compile Include="Error\IErrorHandledObject.cs" />
+    <Compile Include="Error\ErrorHandler.cs" />
     <Compile Include="Assembly\AssemblyCrawler.cs" />
     <Compile Include="Assembly\AssemblyHelper.cs" />
     <Compile Include="Configuration\Configuration.cs" />

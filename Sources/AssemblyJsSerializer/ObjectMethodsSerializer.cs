@@ -1,6 +1,6 @@
-﻿using AssemblyJsSerializer.Configuration;
+﻿using AssemblyJsSerializer.Assemblies;
+using AssemblyJsSerializer.Configuration;
 using AssemblyJsSerializer.Error;
-using AssemblyJsSerializer.Assemblies;
 using System;
 using System.IO;
 using System.Linq;
@@ -10,30 +10,38 @@ using System.Threading.Tasks;
 
 namespace AssemblyJsSerializer
 {
-    public class ObjectMethodsSerializer : NestedErrorHandler
+    public class ObjectMethodsSerializer : IErrorHandledObject
     {
         private Func<Type, MethodInfo, string> DefaultFieldContentGenerator => (t, m) => string.Format(this.Configuration.FieldFormat, this.GetTypeName(t), this.GetMethodName(m));
 
         private async Task InitAsync()
         {
-            var configurationLoader = new ConfigurationLoader();
-            this.InnerErrorHandlers.Add(configurationLoader);
+            var configurationLoader = new ConfigurationLoader(this.ErrorHandler);
+            this.ErrorHandler.AddNestedErrorHandler(configurationLoader.ErrorHandler);
             this.Configuration = await configurationLoader.LoadConfigurationAsync();
-            this.FieldContentGenerator = DefaultFieldContentGenerator;
+            this.FieldContentGenerator = this.DefaultFieldContentGenerator;
 
-            var assemblyHelper = new AssemblyHelper();
-            this.InnerErrorHandlers.Add(assemblyHelper);
+            var assemblyHelper = new AssemblyHelper(this.ErrorHandler);
+            this.ErrorHandler.AddNestedErrorHandler(assemblyHelper.ErrorHandler);
             await assemblyHelper.GetSourceAssemblyAndLoadDependenciesAsync();
             this.SourceAssembly = assemblyHelper.GetAssembly(this.Configuration.SourceAssemblyName);
             if (this.SourceAssembly == null)
             {
-                this.Errors.Add($"Aucune assembly n'a été chargée avec le nom {this.Configuration.SourceAssemblyName}");
+                this.ErrorHandler.Add($"Aucune assembly n'a été chargée avec le nom {this.Configuration.SourceAssemblyName}");
             }
         }
 
-        public ObjectMethodsSerializer()
+        public IErrorHandler ErrorHandler
         {
-                InitAsync().Wait();
+            get;
+        }
+
+        public ObjectMethodsSerializer() : this(new ErrorHandler()) { }
+
+        public ObjectMethodsSerializer(IErrorHandler errorHandler)
+        {
+            this.ErrorHandler = errorHandler;
+            this.InitAsync().Wait();
         }
 
         internal ConfigurationSettings Configuration
@@ -53,10 +61,10 @@ namespace AssemblyJsSerializer
         #region Serializer string builder
         private const string START_OBJECT = "{\r\n";
         private const char END_OBJECT = '}';
-        private StringBuilder StartNewGlobaleObjectBuilder() => new StringBuilder($"{Configuration.CautionHeader}\r\nconst {this.GetObjectName()} = {START_OBJECT}");
+        private StringBuilder StartNewGlobaleObjectBuilder() => new StringBuilder($"{this.Configuration.CautionHeader}\r\nconst {this.GetObjectName()} = {START_OBJECT}");
         private StringBuilder StartNewObjectBuilder() => new StringBuilder(START_OBJECT);
-        private string EndObjectToString(StringBuilder sb, int indentlevel) => sb.Append($"{Indent(indentlevel)}{END_OBJECT}").ToString();
-        private void AppendNewField(StringBuilder sb, string fieldName, string content, int indentlevel) => sb.Append($"{Indent(indentlevel)}{SerializeFieldName(fieldName)}:{content},\r\n");
+        private string EndObjectToString(StringBuilder sb, int indentlevel) => sb.Append($"{this.Indent(indentlevel)}{END_OBJECT}").ToString();
+        private void AppendNewField(StringBuilder sb, string fieldName, string content, int indentlevel) => sb.Append($"{this.Indent(indentlevel)}{this.SerializeFieldName(fieldName)}:{content},\r\n");
         private string SerializeFieldName(string name) => $"'{name}'";
         private string Indent(int number)
         {
@@ -76,35 +84,36 @@ namespace AssemblyJsSerializer
             get; set;
         }
 
+
         private string GetCommentedError()
         {
-            return $"/*{string.Join("\r\n", this.GetAllErrors())}*/";
+            return $"/*{string.Join("\r\n", this.ErrorHandler.GetAllErrors().Select(e=>e.Message))}*/";
         }
 
         private string SerializeAssembly()
         {
             try
             {
-                StringBuilder sbGlobalObject = StartNewGlobaleObjectBuilder();
+                StringBuilder sbGlobalObject = this.StartNewGlobaleObjectBuilder();
 
-                var AssemblyCrawler = new AssemblyCrawler(this.SourceAssembly, this.Configuration.Filters);
-                this.InnerErrorHandlers.Add(AssemblyCrawler);
+                var AssemblyCrawler = new AssemblyCrawler(this.SourceAssembly, this.Configuration.Filters, this.ErrorHandler);
+                this.ErrorHandler.AddNestedErrorHandler(AssemblyCrawler.ErrorHandler);
                 foreach (FilteredType type in AssemblyCrawler.FilterAssemblyContent())
                 {
-                    StringBuilder sbType = StartNewObjectBuilder();
+                    StringBuilder sbType = this.StartNewObjectBuilder();
                     foreach (MethodInfo method in type.Methods)
                     {
-                        AppendNewField(sbType, this.GetMethodName(method), FieldContentGenerator(type.Type, method), 2);
+                        this.AppendNewField(sbType, this.GetMethodName(method), this.FieldContentGenerator(type.Type, method), 2);
                     }
 
-                    AppendNewField(sbGlobalObject, this.GetTypeName(type.Type), EndObjectToString(sbType, 1), 1);
+                    this.AppendNewField(sbGlobalObject, this.GetTypeName(type.Type), this.EndObjectToString(sbType, 1), 1);
                 }
 
                 return this.EndObjectToString(sbGlobalObject, 0);
             }
             catch (Exception e)
             {
-                this.AddExceptionError($"une erreur est survenue lors de la sérialisation", e);
+                this.ErrorHandler.Add($"une erreur est survenue lors de la sérialisation", e);
                 return string.Empty;
             }
         }
@@ -112,7 +121,7 @@ namespace AssemblyJsSerializer
 
         private string GetContentWithError(string content)
         {
-            if (this.GetAllErrors().Any())
+            if (this.ErrorHandler.HasErrors())
             {
                 return this.GetCommentedError() + content;
             }
@@ -132,25 +141,25 @@ namespace AssemblyJsSerializer
             }
             catch (Exception e)
             {
-                this.AddExceptionError($"une erreur est survenue lors de l'écriture du fichier", e);
+                this.ErrorHandler.Add($"une erreur est survenue lors de l'écriture du fichier", e);
             }
 
         }
 
         public string Serialize()
         {
-            return SerializeAsync().Result;
+            return this.SerializeAsync().Result;
         }
 
         public Task<string> SerializeAsync()
         {
-            return SerializeToFileAsync(this.Configuration.TargetFile);
+            return this.SerializeToFileAsync(this.Configuration.TargetFile);
         }
 
         public async Task<string> SerializeToFileAsync(string filePath)
         {
             string serializedContent = string.Empty;
-            if (!this.HasErrors())
+            if (!this.ErrorHandler.HasErrors())
             {
                 serializedContent = this.SerializeAssembly();
             }
